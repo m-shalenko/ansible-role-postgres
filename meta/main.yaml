@@ -1,0 +1,13 @@
+---
+dependencies: []
+galaxy_info:
+  role_name: postgres
+  author: m-shalenko
+  description: A role that installs Postgres in Docker
+  license: "MIT"
+  min_ansible_version: 2.13.13
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
