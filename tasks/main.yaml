@@ -1,0 +1,60 @@
+---
+- name: Postgres | Create group
+  ansible.builtin.group:
+    name: postgres
+    state: present
+    gid: "{{ postgres_group_id }}"
+
+- name: Postgres | Create user
+  ansible.builtin.user:
+    name: postgres
+    state: present
+    uid: "{{ postgres_user_id }}"
+    group: postgres
+    shell: /sbin/nologin
+    create_home: false
+
+- name: Postgres | Create data directories
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item.path }}"
+    owner: postgres
+    group: postgres
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: /var/lib/postgresql, mode: "0755" }
+    - { path: /var/lib/postgresql/data, mode: "0700" }
+
+- name: Postgres | Create systemd service
+  ansible.builtin.template:
+    src: postgres.service.j2
+    dest: /etc/systemd/system/postgres.service
+    owner: root
+    group: root
+    mode: "0640"
+  notify: Restart postgres
+
+- name: Postgres | Start systemd service
+  ansible.builtin.systemd:
+    name: postgres
+    state: started
+    enabled: true
+    daemon_reload: true
+
+- name: Postgres | Create postgres config
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: /var/lib/postgresql/data/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: Restart postgres
+
+- name: Postgres | Create pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: /var/lib/postgresql/data/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  notify: Reload postgres

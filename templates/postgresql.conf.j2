@@ -1,0 +1,11 @@
+# https://www.postgresql.org/docs/current/config-setting.html
+
+{% for key, value in postgres_config.items() %}
+{% if value is string %}
+{{ key }} = '{{ value }}'
+{% elif value is boolean %}
+{{ key }} = {{ 'true' if value else 'false' }}
+{% elif value is integer %}
+{{ key }} = {{ value }}
+{% endif %}
+{% endfor %}

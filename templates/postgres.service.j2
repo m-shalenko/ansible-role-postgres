@@ -1,0 +1,28 @@
+[Unit]
+Requires=docker.service
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker rm --force %N
+ExecStart=/usr/bin/docker run \
+  --name=%N \
+  --rm=true \
+  --network=host \
+  --user={{ postgres_user_id }}:{{ postgres_group_id }} \
+  --stop-timeout={{ postgres_docker_stop_timeout }} \
+  --env="POSTGRES_PASSWORD={{ postgres_password }}" \
+{% for key, value in postgres_docker_envs.items() %}
+  --env="{{ key }}={{ value }}" \
+{% endfor %}
+  --volume=/etc/passwd:/etc/passwd:ro \
+  --volume=/var/lib/postgresql/data:/var/lib/postgresql/data \
+  {{ postgres_docker_image }}:{{ postgres_docker_image_tag }}
+ExecReload={{ postgres_exec_reload }}
+ExecStop=-/usr/bin/docker stop %N
+Restart=always
+StartLimitInterval=0
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
